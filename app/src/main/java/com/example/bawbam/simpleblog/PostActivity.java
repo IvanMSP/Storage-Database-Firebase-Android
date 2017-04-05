@@ -12,6 +12,8 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
@@ -27,6 +29,7 @@ public class PostActivity extends AppCompatActivity {
     private Uri mImageUri = null;
 
     private StorageReference mStorage;
+    private DatabaseReference mDatabase;
 
     private ProgressDialog mProgress;
 
@@ -38,6 +41,9 @@ public class PostActivity extends AppCompatActivity {
         setContentView(R.layout.activity_post);
 
         mStorage = FirebaseStorage.getInstance().getReference();
+        mDatabase = FirebaseDatabase.getInstance().getReference().child("Blog");
+
+
         mSelectImage = (ImageButton) findViewById(R.id.imageSelect);
 
         mPostTitle =(EditText)findViewById(R.id.titleField);
@@ -69,8 +75,8 @@ public class PostActivity extends AppCompatActivity {
         mProgress.setMessage("Uploading Post..");
         mProgress.show();
 
-        String title_val = mPostTitle.getText().toString().trim();
-        String desc_val = mPostDesc.getText().toString().trim();
+        final String title_val = mPostTitle.getText().toString().trim();
+        final String desc_val = mPostDesc.getText().toString().trim();
 
         if(!TextUtils.isEmpty(title_val)&& !TextUtils.isEmpty(desc_val)&& mImageUri!=null){
 
@@ -81,6 +87,13 @@ public class PostActivity extends AppCompatActivity {
                 public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
 
                     Uri downloadUri = taskSnapshot.getDownloadUrl();
+
+                    DatabaseReference newPost = mDatabase.push();
+                    newPost.child("title").setValue(title_val);
+                    newPost.child("Descripcion").setValue(desc_val);
+                    newPost.child("image").setValue(downloadUri.toString());
+
+
                     mProgress.dismiss();
                 }
             });
