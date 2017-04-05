@@ -15,6 +15,7 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.OnProgressListener;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 
@@ -72,8 +73,8 @@ public class PostActivity extends AppCompatActivity {
 
     private void startposting() {
 
-        mProgress.setMessage("Uploading Post..");
-        mProgress.show();
+        //mProgress.setMessage("Uploading Post..");
+        //mProgress.show();
 
         final String title_val = mPostTitle.getText().toString().trim();
         final String desc_val = mPostDesc.getText().toString().trim();
@@ -86,17 +87,29 @@ public class PostActivity extends AppCompatActivity {
                 @Override
                 public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
 
-                    Uri downloadUri = taskSnapshot.getDownloadUrl();
+                    @SuppressWarnings("VisibleForTests") Uri downloadUri = taskSnapshot.getDownloadUrl();
 
                     DatabaseReference newPost = mDatabase.push();
                     newPost.child("title").setValue(title_val);
-                    newPost.child("Descripcion").setValue(desc_val);
+                    newPost.child("desc").setValue(desc_val);
                     newPost.child("image").setValue(downloadUri.toString());
 
 
                     mProgress.dismiss();
+
+                    startActivity(new Intent(PostActivity.this, MainActivity.class));
                 }
-            });
+            }).addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
+                        @Override
+                        public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
+                            //calculating progress percentage
+                            @SuppressWarnings("VisibleForTests") double progress = (100.0 * taskSnapshot.getBytesTransferred()) / taskSnapshot.getTotalByteCount();
+
+                            //displaying percentage in progress dialog
+                            mProgress.setMessage("Uploading " + ((int) progress) + "%...");
+                            mProgress.show();
+                        }
+                    });
         }
 
 
